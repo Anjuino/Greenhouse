@@ -43,6 +43,23 @@ void TgBot::newMsg(FB_msg& msg)
         bot.update();
     }
 
+
+    if (msg.text == "Настройки") {
+        String Message;
+
+        Message += "Влажность земли max: " + String(Zone1.TypeCrop.GroundWet);
+        Message += "Влажность земли min: " + String(Zone1.TypeCrop.GroundDry) + "\n\n";
+
+        Message += "Влажность воздух max: " + String(Zone1.TypeCrop.AirWet);
+        Message += "Влажность воздух min: " + String(Zone1.TypeCrop.AirDry) + "\n\n";
+
+        Message += "Освещение: " + String(Zone1.TypeCrop.Light);
+
+        bot.sendMessage (Message);
+
+        return;
+    }
+
     if (msg.text == "Состояние") {
         String Message;
 
@@ -82,7 +99,7 @@ void TgBot::newMsg(FB_msg& msg)
         Message += "Влажность земли: " + String(Moisture) + "\n\n";
         Message += "Влажность воздуха: " + String(Humidity) + " % \n\n";
         Message += "Освещенность: " + String(100) + " \n\n";
-        
+
         Message += "Полив: " + PumpState + " \n\n";
         Message += "Увлажнитель: " + HumidiferState + " \n\n";
         Message += "Лампа: " + LampState + " \n\n";
