@@ -50,8 +50,8 @@ void TgBot::newMsg(FB_msg& msg)
         Message += "Влажность земли max: " + String(Zone1.TypeCrop.GroundWet);
         Message += "Влажность земли min: " + String(Zone1.TypeCrop.GroundDry) + "\n\n";
 
-        Message += "Влажность воздух max: " + String(Zone1.TypeCrop.AirWet);
-        Message += "Влажность воздух min: " + String(Zone1.TypeCrop.AirDry) + "\n\n";
+        Message += "Влажность воздуха max %: " + String(Zone1.TypeCrop.AirWet);
+        Message += "Влажность воздуха min %: " + String(Zone1.TypeCrop.AirDry) + "\n\n";
 
         Message += "Освещение: " + String(Zone1.TypeCrop.Light);
 
