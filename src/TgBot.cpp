@@ -1,6 +1,9 @@
 #include "TgBot.h"
+#include "DeviceGreenhous.h"
 
 TgBot* TgBot::Bot = nullptr;
+
+extern class DeviceGreenhous Zone1;
 
 TgBot::TgBot(class WIFIManagerTgBot *WIFIManagerTgBot) {
     //this->WIFIManager = WIFIManagerTgBot;
@@ -41,14 +44,60 @@ void TgBot::newMsg(FB_msg& msg)
     }
 
     if (msg.text == "Состояние") {
-        String Messeage = "Состояние";
+        String Message;
 
-        bot.sendMessage (Messeage);
+        int16_t Moisture = Zone1.ReadSensor(DeviceGreenhous::TypeSensor::MoistureSensor);
+        int16_t Humidity = Zone1.ReadSensor(DeviceGreenhous::TypeSensor::HumiditySensor);
+
+        String PumpState;
+        if (Zone1.IsOnPump) PumpState = "Включен";
+        else                PumpState = "Выключен";
+
+        String HumidiferState;
+        if (Zone1.IsOnHumidifier) HumidiferState = "Включен";
+        else                      HumidiferState = "Выключен";
+
+        String LampState;
+        if (Zone1.IsOnLamp) LampState = "Включена";
+        else                LampState = "Выключена";
+
+        String MoistureMonitoring;
+        if (Zone1.Setting.WorkModePump == DeviceGreenhous::Mode::Auto)    MoistureMonitoring = "Автоматический";
+        if (Zone1.Setting.WorkModePump == DeviceGreenhous::Mode::Manual)  MoistureMonitoring = "Ручной";
+        if (Zone1.Setting.WorkModePump == DeviceGreenhous::Mode::Shedule) MoistureMonitoring = "По расписанию";
+
+        String HumidityMonitoring;
+        if (Zone1.Setting.WorkModeHumidifier == DeviceGreenhous::Mode::Auto)    HumidityMonitoring = "Автоматический";
+        if (Zone1.Setting.WorkModeHumidifier == DeviceGreenhous::Mode::Manual)  HumidityMonitoring = "Ручной";
+        if (Zone1.Setting.WorkModeHumidifier == DeviceGreenhous::Mode::Shedule) HumidityMonitoring = "По расписанию";
+
+        String LightMonitoring;
+        if (Zone1.Setting.WorkModeLamp == DeviceGreenhous::Mode::Auto)    LightMonitoring = "Автоматический";
+        if (Zone1.Setting.WorkModeLamp == DeviceGreenhous::Mode::Manual)  LightMonitoring = "Ручной";
+        if (Zone1.Setting.WorkModeLamp == DeviceGreenhous::Mode::Shedule) LightMonitoring = "По расписанию";
+        
+
+        Message += "Состояние \n\n";
+
+        Message += "Влажность земли: " + String(Moisture) + "\n\n";
+        Message += "Влажность воздуха: " + String(Humidity) + " % \n\n";
+        Message += "Освещенность: " + String(100) + " \n\n";
+        
+        Message += "Полив: " + PumpState + " \n\n";
+        Message += "Увлажнитель: " + HumidiferState + " \n\n";
+        Message += "Лампа: " + LampState + " \n\n";
+
+        Message += "Мониторинг: \n\n";
+        Message += "---Земля: " + MoistureMonitoring;
+        Message += "---Воздух: " + HumidityMonitoring;
+        Message += "---Освещения: " + LightMonitoring;
+
+        bot.sendMessage (Message);
 
         return;
     }
 
-    if (msg.text == "Меню") {
+    if (msg.text == "Меню" || msg.text == "/Start") {
         ShowGlobalMenu();   // Отобразить меню в ТГ боте
         return;
     }

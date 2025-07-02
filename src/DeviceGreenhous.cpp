@@ -1,16 +1,18 @@
 #include "DeviceGreenhous.h"
+#include "EEPROM.h"
 
-DeviceGreenhous::DeviceGreenhous(DataCrop TypeCrop)
+DeviceGreenhous::DeviceGreenhous(DataCrop TypeCrop, uint16_t SettingAddress)
 {
     this->TypeCrop = TypeCrop;
+    this->SettingAddress = SettingAddress;
 }
 
 DeviceGreenhous::~DeviceGreenhous()
 {
-
+    if (dht) delete dht;
 }
 
-void DeviceGreenhous::Init(uint8_t Port_Humidifier, uint8_t Port_Pump, uint8_t Port_MoistureSensor, uint8_t Port_LightSensor)
+void DeviceGreenhous::Init(uint8_t Port_Humidifier, uint8_t Port_Pump, uint8_t Port_MoistureSensor, uint8_t Port_LightSensor, uint8_t Port_HumidiferSensor)
 {
     PhysicsPin.Port_Humidifier     = Port_Humidifier;
     PhysicsPin.Port_Pump           = Port_Pump;
@@ -26,24 +28,45 @@ void DeviceGreenhous::Init(uint8_t Port_Humidifier, uint8_t Port_Pump, uint8_t P
     Lamp.setPin(PhysicsPin.Port_LightSensor);
     Lamp.updateLength(196);
     Lamp.updateType(NEO_GRB + NEO_KHZ800);
+
+    EEPROM.get(SettingAddress, Setting);
+
+    if (Setting.SettingIsEmpty) {
+        Setting.SettingIsEmpty = false;
+
+        Setting.WorkModePump = 1;
+        Setting.TimePumpOn   = 5000;
+
+        Setting.WorkModeHumidifier = 1;
+        Setting.TimeHumidifierOn   = 120000;
+
+        Setting.TimeLampOn = 0;
+        Setting.TimeLampOn = 1800000;
+
+        EEPROM.put(SettingAddress, Setting);
+        EEPROM.commit();
+    }
+    if (!dht) {
+        dht = new DHT(Port_HumidiferSensor, DHT11);
+        dht->begin();
+    }
 }
 
 int16_t DeviceGreenhous::ReadSensor(uint8_t TypeSensor)
 {
     if (TypeSensor == MoistureSensor) {
     
-        /*for (uint8_t Count = 0; Count < 3; Count++) {
+        for (uint8_t Count = 0; Count < 3; Count++) {
             Moisture += analogRead(PhysicsPin.Port_MoistureSensor);
         }
 
-        Moisture = Moisture / 3;*/
+        Moisture = Moisture / 3;
         
-        Moisture = random(400, 800);
         return Moisture;
     }
 
     if (TypeSensor == HumiditySensor) {
-        return 10;
+        return dht->readHumidity();
     }
 
     if (TypeSensor == LightSensor) {
@@ -119,8 +142,7 @@ void DeviceGreenhous::MonitoringMoisture()
 
             if(Moisture > TypeCrop.GroundDry) {
                 TimerMonitoringPump = millis() + 20000;
-                //PumpOn(Setting.TimePumpOn);
-                PumpOn(20000);
+                PumpOn(Setting.TimePumpOn);
             }
         }
     }
