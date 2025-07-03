@@ -7,6 +7,6 @@ void TgBotCode( void * pvParameters ) {
 
   while(true) {
     Bot.Loop();
-    yield();
+    delay(1);
   }
 }

@@ -10,17 +10,13 @@ void setup()
   EEPROM.begin(512);
 
   xTaskCreatePinnedToCore(MonitoringCodeZone1, "MonitoringZone1", 1024 * 30, NULL, 3, &Monitoring_taskZone1, 0);
-  /*
+  
   delay(10);
-
-  WIFIManager.Start(false);
-
-  delay(50);
-
-  Bot.BotInit();
+  WiFi.begin("Wentor", "0hqWs40IsY");
+  //WIFIManager.Start(false);
 
   xTaskCreatePinnedToCore(TgBotCode, "TgBootLoop", 1024 * 10, NULL, 4, &TgBot_task, 0); 
-  */
+  
 }
 
 void loop() 

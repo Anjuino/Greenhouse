@@ -40,7 +40,7 @@ void DeviceGreenhous::Init(uint8_t Port_Humidifier, uint8_t Port_Pump, uint8_t P
         Setting.WorkModeHumidifier = 1;
         Setting.TimeHumidifierOn   = 120000;
 
-        Setting.TimeLampOn = 0;
+        Setting.WorkModeLamp = 0;
         Setting.TimeLampOn = 1800000;
 
         EEPROM.put(SettingAddress, Setting);

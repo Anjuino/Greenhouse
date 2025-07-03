@@ -105,9 +105,9 @@ void TgBot::newMsg(FB_msg& msg)
         Message += "Лампа: " + LampState + " \n\n";
 
         Message += "Мониторинг: \n\n";
-        Message += "---Земля: " + MoistureMonitoring;
-        Message += "---Воздух: " + HumidityMonitoring;
-        Message += "---Освещения: " + LightMonitoring;
+        Message += "---Земля: " + MoistureMonitoring  + "\n";
+        Message += "---Воздух: " + HumidityMonitoring +  "\n";
+        Message += "---Освещения: " + LightMonitoring + "\n";
 
         bot.sendMessage (Message);
 
