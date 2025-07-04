@@ -20,9 +20,7 @@ class DeviceGreenhous {
         uint64_t TimerMonitoringPump = 0;           // Время монитронига для полива
         uint64_t TimerMonitoringHumidifier = 0;     // Время монитронига для влажности воздуха
         uint64_t TimerMonitoringLamp = 0;           // Время монитронига для освещения
-        
-        uint16_t SettingAddress = 260;
-
+    
         struct {
             uint8_t Port_Humidifier;
             uint8_t Port_Pump;
@@ -45,6 +43,8 @@ class DeviceGreenhous {
         void CheckTimerLighiting();
 
     public:
+
+        uint16_t SettingAddress = 260;
 
         bool IsOnPump = false;          // Работа насоса
         bool IsOnHumidifier = false;    // Работа увлажнителя
@@ -73,6 +73,9 @@ class DeviceGreenhous {
               
             uint8_t WorkModeLamp;
             uint64_t TimeLampOn;
+
+            bool IsNightMode;
+            bool IsNeedShedule;
              
         } Setting;
 

@@ -28,6 +28,7 @@ void DeviceGreenhous::Init(uint8_t Port_Humidifier, uint8_t Port_Pump, uint8_t P
     Lamp.setPin(PhysicsPin.Port_LightSensor);
     Lamp.updateLength(196);
     Lamp.updateType(NEO_GRB + NEO_KHZ800);
+    Lamp.setBrightness(200);
 
     EEPROM.get(SettingAddress, Setting);
 
@@ -38,16 +39,19 @@ void DeviceGreenhous::Init(uint8_t Port_Humidifier, uint8_t Port_Pump, uint8_t P
         Setting.TimePumpOn   = 5000;
 
         Setting.WorkModeHumidifier = 1;
-        Setting.TimeHumidifierOn   = 120000;
+        Setting.TimeHumidifierOn   = 240000;
 
         Setting.WorkModeLamp = 0;
-        Setting.TimeLampOn = 1800000;
+        Setting.TimeLampOn = 60000 * 60;
+
+        Setting.IsNeedShedule = true;
+        Setting.IsNightMode   = false;
 
         EEPROM.put(SettingAddress, Setting);
         EEPROM.commit();
     }
     if (!dht) {
-        dht = new DHT(Port_HumidiferSensor, DHT11);
+        dht = new DHT(Port_HumidiferSensor, DHT22);
         dht->begin();
     }
 }
@@ -66,7 +70,8 @@ int16_t DeviceGreenhous::ReadSensor(uint8_t TypeSensor)
     }
 
     if (TypeSensor == HumiditySensor) {
-        return dht->readHumidity();
+        Humidity = dht->readHumidity();
+        return Humidity;
     }
 
     if (TypeSensor == LightSensor) {
@@ -80,7 +85,6 @@ void DeviceGreenhous::PumpOn(uint16_t Timer)
     TimerPump = millis() + Timer;
     IsOnPump = true;
     digitalWrite(PhysicsPin.Port_Pump, LOW);
-    Serial.println("Включаю помпу"); 
 }
 
 void DeviceGreenhous::LampOn(uint16_t Timer)
@@ -114,7 +118,6 @@ void DeviceGreenhous::CheckTimerPump()
     if(TimerPump < millis() && IsOnPump) {
         digitalWrite(PhysicsPin.Port_Pump, HIGH);
         IsOnPump = false;
-        Serial.println("Выключаю помпу"); 
     }
 }
 
@@ -133,16 +136,18 @@ void DeviceGreenhous::MonitoringMoisture()
 {
     CheckTimerPump();
     
-    if(Setting.WorkModePump == Auto) {
-        if(millis() > TimerMonitoringPump) {
-            TimerMonitoringPump = millis() + 2000;
+    if (!Setting.IsNightMode) {
+        if(Setting.WorkModePump == Auto) {
+            if(millis() > TimerMonitoringPump) {
+                TimerMonitoringPump = millis() + 2000;
 
-            ReadSensor(MoistureSensor);
-            Serial.println(Moisture); 
+                ReadSensor(MoistureSensor);
+                Serial.println(Moisture); 
 
-            if(Moisture > TypeCrop.GroundDry) {
-                TimerMonitoringPump = millis() + 20000;
-                PumpOn(Setting.TimePumpOn);
+                if(Moisture > TypeCrop.GroundDry) {
+                    TimerMonitoringPump = millis() + 20000;
+                    PumpOn(Setting.TimePumpOn);
+                }
             }
         }
     }
@@ -152,14 +157,16 @@ void DeviceGreenhous::MonitoringHumidity()
 {
     CheckTimerHumidifier();
     
-    if(Setting.WorkModeHumidifier == Auto) {
-        if(millis() > TimerMonitoringHumidifier) {
-            TimerMonitoringHumidifier = millis() + 120000;
-            ReadSensor(HumiditySensor);
-            
-            if (Humidity < TypeCrop.AirDry) {
-                HumidifierOn(Setting.TimeHumidifierOn);
-                TimerMonitoringHumidifier = millis() + 20000;
+    if (!Setting.IsNightMode) {
+        if(Setting.WorkModeHumidifier == Auto) {
+            if(millis() > TimerMonitoringHumidifier) {
+                TimerMonitoringHumidifier = millis() + 120000;
+                ReadSensor(HumiditySensor);
+                
+                if (Humidity < TypeCrop.AirDry) {
+                    HumidifierOn(Setting.TimeHumidifierOn);
+                    TimerMonitoringHumidifier = millis() + 20000;
+                }
             }
         }
     }
@@ -169,10 +176,12 @@ void DeviceGreenhous::MonitoringLighting()
 {
     CheckTimerLighiting();
 
-    if(Setting.WorkModeLamp == Auto) {
-        if(millis() > TimerMonitoringLamp) {
-            TimerMonitoringLamp = millis() + 120000;
-            ReadSensor(LightSensor);
+    if (!Setting.IsNightMode) {
+        if(Setting.WorkModeLamp == Auto) {
+            if(millis() > TimerMonitoringLamp) {
+                TimerMonitoringLamp = millis() + 120000;
+                ReadSensor(LightSensor);
+            }
         }
     }
 }
