@@ -24,6 +24,14 @@ void MonitoringCodeZone1(void * pvParameters) {
       doc["TypeMessage"] = TypeMessage::AirHumidity;
       doc["Message"]     = Zone1.ReadSensor(DeviceGreenhous::HumiditySensor);
       queue.push(doc); 
+
+      doc["TypeMessage"] = TypeMessage::StatePump;
+      doc["Message"]     = Zone1.IsOnPump ? 1 : 0;
+      queue.push(doc);
+      
+      doc["TypeMessage"] = TypeMessage::StateHumidifer;
+      doc["Message"]     = Zone1.IsOnHumidifier ? 1 : 0;
+      queue.push(doc); 
     }
 
   }
