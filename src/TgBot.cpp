@@ -10,6 +10,7 @@ extern class DeviceGreenhous Zone1;
 extern class NTPClient timeClient;
 
 uint8_t CurrentMenu = 0;
+uint8_t SubMenu = 0;
 
 TgBot::TgBot(class WIFIManagerTgBot *WIFIManagerTgBot) {
     //this->WIFIManager = WIFIManagerTgBot;
@@ -99,6 +100,7 @@ void TgBot::newMsg(FB_msg& msg)
 
     if (msg.text == "Мониторинг почвы") {
         CurrentMenu = 1;
+        SubMenu = 1;
         if (Zone1.Setting.WorkModePump == Zone1.Manual) bot.showMenu("Включить автоматический режим\n Назад");
         else                                            bot.showMenu("Включить ручной режим\n Назад");
         return;
@@ -106,6 +108,7 @@ void TgBot::newMsg(FB_msg& msg)
 
     if (msg.text == "Мониторинг воздуха") {
         CurrentMenu = 2;
+        SubMenu = 1;
         if (Zone1.Setting.WorkModeHumidifier == Zone1.Manual) bot.showMenu("Включить автоматический режим\n Назад");
         else                                                  bot.showMenu("Включить ручной режим\n Назад");
         return;
@@ -113,6 +116,7 @@ void TgBot::newMsg(FB_msg& msg)
 
 
     if (msg.text == "Включить автоматический режим") {
+        SubMenu = 1;
         String Message;
         if(CurrentMenu == 1) {
             Zone1.Setting.WorkModePump = Zone1.Auto;
@@ -131,6 +135,7 @@ void TgBot::newMsg(FB_msg& msg)
     }
 
     if (msg.text == "Включить ручной режим") {
+        SubMenu = 1;
         String Message;
         if(CurrentMenu == 1) {
             Zone1.Setting.WorkModePump = Zone1.Manual;
@@ -269,7 +274,12 @@ void TgBot::newMsg(FB_msg& msg)
     }
 
     if (msg.text == "Назад") {
-        ShowGlobalMenu();   // Отобразить меню в ТГ боте
+        if (SubMenu == 1) {
+            SubMenu = 0;
+            if (Zone1.Setting.IsNightMode) bot.showMenu("Выключить ночное расписание\n Мониторинг почвы\n Мониторинг воздуха\n Назад");
+            else                           bot.showMenu("Включить ночное расписание \n Мониторинг почвы\n Мониторинг воздуха\n Назад");
+        }
+        else ShowGlobalMenu();   // Отобразить меню в ТГ боте
         return;
     }
 }
