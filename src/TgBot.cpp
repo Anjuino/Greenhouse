@@ -243,8 +243,8 @@ void TgBot::newMsg(FB_msg& msg)
         Message += "Состояние \n";
 
         Message += "Влажность почвы: " + String(Moisture) + "%\n";
-        Message += "Влажность воздуха: " + String(Humidity) + "%\n";
-        Message += "Освещенность: " + String(100) + " \n\n";
+        Message += "Влажность воздуха: " + String(Humidity) + "%\n\n";
+        //Message += "Освещенность: " + String(100) + " \n\n";
 
         Message += "Полив: " + PumpState + "\n";
         Message += "Увлажнитель: " + HumidiferState + "\n";

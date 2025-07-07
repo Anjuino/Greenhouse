@@ -25,7 +25,7 @@ void setup()
   
   delay(10);
 
-  xTaskCreatePinnedToCore(TgBotCode, "TgBootLoop", 1024 * 20, NULL, 4, &TgBot_task, 0); 
+  xTaskCreatePinnedToCore(TgBotCode, "TgBootLoop", 1024 * 25, NULL, 2, &TgBot_task, 1); 
   xTaskCreatePinnedToCore(TimeCode, "TimeLoop", 1024 * 4, NULL, 5, &Time_task, 1); 
   
 }
