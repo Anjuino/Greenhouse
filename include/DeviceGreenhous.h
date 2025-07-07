@@ -90,9 +90,9 @@ class DeviceGreenhous {
         void MonitoringHumidity();
         void MonitoringLighting();
 
-        void PumpOn(uint16_t Timer);
-        void HumidifierOn(uint16_t Timer);
-        void LampOn(uint16_t Timer);
+        void PumpOn(uint64_t Timer);
+        void HumidifierOn(uint64_t Timer);
+        void LampOn(uint64_t Timer);
 
         int16_t ReadSensor(uint8_t TypeSensor);
 };

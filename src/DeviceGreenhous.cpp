@@ -1,5 +1,6 @@
 #include "DeviceGreenhous.h"
 #include "EEPROM.h"
+#include "Tasks/TaskQueue.h"
 
 DeviceGreenhous::DeviceGreenhous(DataCrop TypeCrop, uint16_t SettingAddress)
 {
@@ -60,12 +61,10 @@ int16_t DeviceGreenhous::ReadSensor(uint8_t TypeSensor)
 {
     if (TypeSensor == MoistureSensor) {
     
-        for (uint8_t Count = 0; Count < 3; Count++) {
-            Moisture += analogRead(PhysicsPin.Port_MoistureSensor);
-        }
+        Moisture = analogRead(PhysicsPin.Port_MoistureSensor);
 
-        Moisture = Moisture / 3;
-        
+        Moisture = 100 - ((Moisture - 2500) * 100) / (4095 - 2500);
+
         return Moisture;
     }
 
@@ -80,14 +79,24 @@ int16_t DeviceGreenhous::ReadSensor(uint8_t TypeSensor)
     return 0;
 }
 
-void DeviceGreenhous::PumpOn(uint16_t Timer)
+void DeviceGreenhous::PumpOn(uint64_t Timer)
 {
     TimerPump = millis() + Timer;
     IsOnPump = true;
     digitalWrite(PhysicsPin.Port_Pump, LOW);
+
+    JsonDocument doc;
+    doc["TypeMessage"] = TypeMessage::StatePump;
+    doc["Message"]     = 1;
+    queue.push(doc);
+
+    doc["TypeMessage"] = TypeMessage::GroundHumidity;
+    doc["Message"]     = Moisture;
+    queue.push(doc);
+
 }
 
-void DeviceGreenhous::LampOn(uint16_t Timer)
+void DeviceGreenhous::LampOn(uint64_t Timer)
 {
     TimerLamp = millis() + Timer;
     IsOnLamp = true;
@@ -96,20 +105,43 @@ void DeviceGreenhous::LampOn(uint16_t Timer)
         Lamp.setPixelColor (i, 255, 0, 255);
     }
     Lamp.show ();
+
+    JsonDocument doc;
+    doc["TypeMessage"] = TypeMessage::StateLamp;
+    doc["Message"]     = 1;
+    queue.push(doc);
 }
 
-void DeviceGreenhous::HumidifierOn(uint16_t Timer)
+void DeviceGreenhous::HumidifierOn(uint64_t Timer)
 {
     TimerHumidifier = millis() + Timer;
     IsOnHumidifier = true;
-    digitalWrite(PhysicsPin.Port_Humidifier, HIGH); 
+    digitalWrite(PhysicsPin.Port_Humidifier, LOW);
+
+    JsonDocument doc;
+    doc["TypeMessage"] = TypeMessage::StateHumidifer;
+    doc["Message"]     = 1;
+    queue.push(doc);
+
+    doc["TypeMessage"] = TypeMessage::AirHumidity;
+    doc["Message"]     = Humidity;
+    queue.push(doc);
 }
 
 void DeviceGreenhous::CheckTimerHumidifier()
 {
     if(TimerHumidifier < millis() && IsOnHumidifier) {
-        digitalWrite(PhysicsPin.Port_Humidifier, LOW);
+        digitalWrite(PhysicsPin.Port_Humidifier, HIGH);
         IsOnHumidifier = false;
+
+        JsonDocument doc;
+        doc["TypeMessage"] = TypeMessage::StateHumidifer;
+        doc["Message"]     = 0;
+        queue.push(doc);
+
+        doc["TypeMessage"] = TypeMessage::AirHumidity;
+        doc["Message"]     = ReadSensor(DeviceGreenhous::MoistureSensor);
+        queue.push(doc);
     } 
 }
 
@@ -118,6 +150,15 @@ void DeviceGreenhous::CheckTimerPump()
     if(TimerPump < millis() && IsOnPump) {
         digitalWrite(PhysicsPin.Port_Pump, HIGH);
         IsOnPump = false;
+
+        JsonDocument doc;
+        doc["TypeMessage"] = TypeMessage::StatePump;
+        doc["Message"]     = 0;
+        queue.push(doc); 
+
+        doc["TypeMessage"] = TypeMessage::GroundHumidity;
+        doc["Message"]     = ReadSensor(DeviceGreenhous::MoistureSensor);
+        queue.push(doc);
     }
 }
 
@@ -129,6 +170,11 @@ void DeviceGreenhous::CheckTimerLighiting()
             Lamp.setPixelColor (i, 0, 0, 0);
         }
         Lamp.show ();
+
+        JsonDocument doc;
+        doc["TypeMessage"] =TypeMessage::StateLamp;
+        doc["Message"]     = 0;
+        queue.push(doc); 
     } 
 }
 
@@ -139,13 +185,11 @@ void DeviceGreenhous::MonitoringMoisture()
     if (!Setting.IsNightMode) {
         if(Setting.WorkModePump == Auto) {
             if(millis() > TimerMonitoringPump) {
-                TimerMonitoringPump = millis() + 2000;
+                TimerMonitoringPump = millis() + 60000*20;
 
                 ReadSensor(MoistureSensor);
-                Serial.println(Moisture); 
-
-                if(Moisture > TypeCrop.GroundDry) {
-                    TimerMonitoringPump = millis() + 20000;
+                if(Moisture < TypeCrop.GroundDry) {
+                    //TimerMonitoringPump = millis() + 60000*20;
                     PumpOn(Setting.TimePumpOn);
                 }
             }
@@ -160,12 +204,12 @@ void DeviceGreenhous::MonitoringHumidity()
     if (!Setting.IsNightMode) {
         if(Setting.WorkModeHumidifier == Auto) {
             if(millis() > TimerMonitoringHumidifier) {
-                TimerMonitoringHumidifier = millis() + 120000;
+                TimerMonitoringHumidifier = millis() + 60000*20;
                 ReadSensor(HumiditySensor);
                 
                 if (Humidity < TypeCrop.AirDry) {
                     HumidifierOn(Setting.TimeHumidifierOn);
-                    TimerMonitoringHumidifier = millis() + 20000;
+                    //TimerMonitoringHumidifier = millis() + 60000*20;
                 }
             }
         }
@@ -179,7 +223,7 @@ void DeviceGreenhous::MonitoringLighting()
     if (!Setting.IsNightMode) {
         if(Setting.WorkModeLamp == Auto) {
             if(millis() > TimerMonitoringLamp) {
-                TimerMonitoringLamp = millis() + 120000;
+                TimerMonitoringLamp = millis() + 60000*20;
                 ReadSensor(LightSensor);
             }
         }

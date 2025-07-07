@@ -10,18 +10,22 @@ TaskHandle_t Time_task;
 void TimeCode( void * pvParameters ) {
    timeClient.begin();
    timeClient.setTimeOffset(25200); // +7 Часовой пояс 
-
+   timeClient.update();
    while(true) {
       if (Zone1.Setting.IsNeedShedule) {
          timeClient.update();
-         if(timeClient.getHours() >= 0 || timeClient.getHours() <= 9) {
+         if(timeClient.getHours() >= 0 && timeClient.getHours() <= 9) {
             Zone1.Setting.IsNightMode = true;
          }
 
-         if(timeClient.getHours() >= 10 || timeClient.getHours() <= 23) {
+         if(timeClient.getHours() >= 10 && timeClient.getHours() <= 23) {
             Zone1.Setting.IsNightMode = false;
          }
          delay(20000);
+      }
+      else {
+         timeClient.update();
+         delay(60000);
       }
    }
 }

@@ -2,6 +2,7 @@
 #include "DeviceGreenhous.h"
 #include <NTPClient.h>
 #include <WiFiUdp.h>
+#include "Tasks/TaskQueue.h"
 
 TgBot* TgBot::Bot = nullptr;
 
@@ -23,7 +24,7 @@ void TgBot::BotInit() {
     //bot.setToken(WIFIManager->getTokenBot());
     //bot.setChatID(WIFIManager->getUsers());
 
-    bot.setToken("8045582620:AAHEhDcspY6rttQ6fja0696QjlFeLPzz8vg");
+    bot.setToken("7557142220:AAFDcI7KO0MheGFJO5iuKPwYGhmKKQMnA7g");
     bot.setChatID("942120524");
 
     bot.setPeriod(1000);
@@ -45,6 +46,7 @@ void TgBot::newMsg(FB_msg& msg)
     if (msg.OTA) {
         bot.closeMenu();
         delay(10);
+        bot.tickManual();
         bot.update();
     }
 
@@ -53,8 +55,8 @@ void TgBot::newMsg(FB_msg& msg)
         String Message;
 
         Message += "Выставленные настройки для мониторинга \n";
-        Message += "Сухость почвы max: " + String(Zone1.TypeCrop.GroundWet) + "\n";
-        Message += "Сухость почвы min: " + String(Zone1.TypeCrop.GroundDry) + "\n";
+        Message += "Сухость почвы max: " + String(Zone1.TypeCrop.GroundWet) + "%\n";
+        Message += "Сухость почвы min: " + String(Zone1.TypeCrop.GroundDry) + "%\n";
         Message += "Время полива: "      + String((Zone1.Setting.TimePumpOn / 1000)) + "с\n\n";
 
         Message += "Влажность воздуха max: " + String(Zone1.TypeCrop.AirWet) + "% \n";
@@ -66,29 +68,32 @@ void TgBot::newMsg(FB_msg& msg)
 
         bot.sendMessage (Message);
 
-        if (Zone1.Setting.IsNightMode) bot.showMenu("Выключить ночной режим\n Мониторинг почвы\n Мониторинг воздуха\n Назад");
-        else                           bot.showMenu("Включить ночной режим \n Мониторинг почвы\n Мониторинг воздуха\n Назад");
+        if (Zone1.Setting.IsNightMode) bot.showMenu("Выключить ночное расписание\n Мониторинг почвы\n Мониторинг воздуха\n Назад");
+        else                           bot.showMenu("Включить ночное расписание \n Мониторинг почвы\n Мониторинг воздуха\n Назад");
 
         return;
     }
 
-    if (msg.text == "Выключить ночной режим") {
+    if (msg.text == "Выключить ночное расписание") {
         Zone1.Setting.IsNightMode = false;
         Zone1.Setting.IsNeedShedule = false;
         EEPROM.put(Zone1.SettingAddress, Zone1.Setting);
         EEPROM.commit();
 
-        bot.sendMessage("Ночной режим выключен");
+        bot.sendMessage("Ночное расписание выключено");
+        bot.showMenu("Включить ночное расписание \n Мониторинг почвы\n Мониторинг воздуха\n Назад");
+
         return;
     }
 
-    if (msg.text == "Включить ночной режим") {
-        //Zone1.Setting.IsNightMode = true;
+    if (msg.text == "Включить ночное расписание") {
         Zone1.Setting.IsNeedShedule = true;
         EEPROM.put(Zone1.SettingAddress, Zone1.Setting);
         EEPROM.commit();
 
-        bot.sendMessage("Ночной режим включен");
+        bot.sendMessage("Ночное расписание включено");
+        bot.showMenu("Выключить ночное расписание \n Мониторинг почвы\n Мониторинг воздуха\n Назад");
+        
         return;
     }
 
@@ -121,6 +126,7 @@ void TgBot::newMsg(FB_msg& msg)
         EEPROM.commit();
 
         bot.sendMessage(Message);
+        bot.showMenu("Включить ручной режим\n Назад");
         return;
     }
 
@@ -138,6 +144,7 @@ void TgBot::newMsg(FB_msg& msg)
         EEPROM.commit();
 
         bot.sendMessage(Message);
+        bot.showMenu("Включить автоматический режим\n Назад");
         return;
     }
 
@@ -149,9 +156,10 @@ void TgBot::newMsg(FB_msg& msg)
     if (msg.text == "Включить полив") {
         String Message;
         if (Zone1.IsOnPump) Message = "Полив уже включен";
-        else                Message = "Включил полив";
-
-        Zone1.PumpOn(Zone1.Setting.TimePumpOn);
+        else { 
+            Message = "Включил полив";
+            Zone1.PumpOn(Zone1.Setting.TimePumpOn);
+        }
 
         bot.sendMessage (Message);
         return;
@@ -159,10 +167,11 @@ void TgBot::newMsg(FB_msg& msg)
 
     if (msg.text == "Включить увлажнитель") {
         String Message;
-        if (Zone1.IsOnPump) Message = "Увлажнитель уже включен";
-        else                Message = "Включил увлажнитель";
-
-        Zone1.HumidifierOn(Zone1.Setting.TimeHumidifierOn);
+        if (Zone1.IsOnHumidifier) Message = "Увлажнитель уже включен";
+        else {
+            Message = "Включил увлажнитель";
+            Zone1.HumidifierOn(Zone1.Setting.TimeHumidifierOn);
+        }
 
         bot.sendMessage (Message);
         return;
@@ -171,9 +180,15 @@ void TgBot::newMsg(FB_msg& msg)
     if (msg.text == "Включить освещение") {
         String Message;
         if (Zone1.IsOnPump) Message = "Освещение уже включено";
-        else                Message = "Включил освещение";
+        else {
+            Message = "Включил освещение";
+            Zone1.LampOn(Zone1.Setting.TimeLampOn);
 
-        Zone1.LampOn(Zone1.Setting.TimeLampOn);
+            JsonDocument doc;
+            doc["TypeMessage"] = TypeMessage::StateLamp;
+            doc["Message"]     = 1;
+            queue.push(doc);
+        }
 
         bot.sendMessage (Message);
         return;
@@ -216,14 +231,14 @@ void TgBot::newMsg(FB_msg& msg)
         if (Zone1.Setting.IsNightMode) NightMode = "Включен";
         else                           NightMode = "Выключен";
 
-        String TimeMode;
+        /*String TimeMode;
         if (Zone1.Setting.IsNeedShedule) TimeMode = "Включено";
-        else                             TimeMode = "Выключено";           
+        else                             TimeMode = "Выключено";  */         
 
         Message += "Состояние \n";
 
-        Message += "Влажность почвы: " + String(Moisture) + "\n";
-        Message += "Влажность воздуха: " + String(Humidity) + "\n";
+        Message += "Влажность почвы: " + String(Moisture) + "%\n";
+        Message += "Влажность воздуха: " + String(Humidity) + "%\n";
         Message += "Освещенность: " + String(100) + " \n\n";
 
         Message += "Полив: " + PumpState + "\n";
@@ -234,8 +249,8 @@ void TgBot::newMsg(FB_msg& msg)
         Message += "Почва: " + MoistureMonitoring  + "\n";
         Message += "Воздух: " + HumidityMonitoring +  "\n";
         Message += "Освещение: " + LightMonitoring + "\n";
-        Message += "Ночной режим: " + LightMonitoring + "\n";
-        Message += "Расписание: " + TimeMode + "\n";
+        Message += "Ночной режим: " + NightMode + "\n";
+        //Message += "Ночное расписание: " + TimeMode + "\n";
         Message += "Время на устройстве: " + String(timeClient.getHours()) + ":" + String(timeClient.getMinutes()) + "\n";
 
         bot.sendMessage (Message);
