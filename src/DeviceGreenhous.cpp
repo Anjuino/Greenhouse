@@ -63,11 +63,15 @@ void DeviceGreenhous::Init(uint8_t Port_Humidifier, uint8_t Port_Pump, uint8_t P
 int16_t DeviceGreenhous::ReadSensor(uint8_t TypeSensor)
 {
     if (TypeSensor == MoistureSensor) {
-    
-        Moisture = analogRead(PhysicsPin.Port_MoistureSensor);
+        
+        Moisture = 0;
 
-        Moisture = 100 - ((Moisture - 2500) * 100) / (4095 - 2500);
-
+        for (uint8_t i = 0; i <= 3; i++) {
+            int16_t MoistureMeasurement = analogRead(PhysicsPin.Port_MoistureSensor);
+            Moisture += 100 - ((MoistureMeasurement - 2500) * 100) / (4095 - 2500);
+        }
+        
+        Moisture = Moisture / 3;
         return Moisture;
     }
 
