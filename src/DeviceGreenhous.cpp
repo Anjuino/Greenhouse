@@ -13,16 +13,19 @@ DeviceGreenhous::~DeviceGreenhous()
     if (dht) delete dht;
 }
 
-void DeviceGreenhous::Init(uint8_t Port_Humidifier, uint8_t Port_Pump, uint8_t Port_MoistureSensor, uint8_t Port_LightSensor, uint8_t Port_HumidiferSensor)
+void DeviceGreenhous::Init(uint8_t Port_Humidifier, uint8_t Port_Pump, uint8_t Port_MoistureSensor, uint8_t Port_LightSensor, uint8_t Port_HumiditySensor, uint8_t Port_WaterSensor)
 {
     PhysicsPin.Port_Humidifier     = Port_Humidifier;
     PhysicsPin.Port_Pump           = Port_Pump;
     PhysicsPin.Port_MoistureSensor = Port_MoistureSensor;
     PhysicsPin.Port_LightSensor    = Port_LightSensor;
+    PhysicsPin.Port_HumiditySensor = Port_HumiditySensor;
+    PhysicsPin.Port_WaterSensor    = Port_WaterSensor;
 
     pinMode(PhysicsPin.Port_Humidifier, OUTPUT);        // Порт увлажнителя в режиме выхода
     pinMode(PhysicsPin.Port_Pump, OUTPUT);              // Порт насоса в режиме выхода
-
+    pinMode(PhysicsPin.Port_WaterSensor, INPUT);  // Начинаем в отключенном состоянии
+ 
     digitalWrite(PhysicsPin.Port_Humidifier, HIGH);      // При старте пишу 1. Выключено по умолчанию
     digitalWrite(PhysicsPin.Port_Pump, HIGH);
 
@@ -52,7 +55,7 @@ void DeviceGreenhous::Init(uint8_t Port_Humidifier, uint8_t Port_Pump, uint8_t P
         EEPROM.commit();
     }
     if (!dht) {
-        dht = new DHT(Port_HumidiferSensor, DHT22);
+        dht = new DHT(PhysicsPin.Port_HumiditySensor, DHT22);
         dht->begin();
     }
 }
@@ -76,24 +79,50 @@ int16_t DeviceGreenhous::ReadSensor(uint8_t TypeSensor)
     if (TypeSensor == LightSensor) {
     }
 
+    if (TypeSensor == WaterSensor) {
+        pinMode(PhysicsPin.Port_WaterSensor, OUTPUT);
+        digitalWrite(PhysicsPin.Port_WaterSensor, HIGH);
+        delay(10);  
+        
+        pinMode(PhysicsPin.Port_WaterSensor, INPUT_PULLUP);
+        delay(10);  
+        
+        int16_t waterStatus = digitalRead(PhysicsPin.Port_WaterSensor);
+        
+        pinMode(PhysicsPin.Port_WaterSensor, INPUT);
+        
+        return waterStatus;
+    }
+
     return 0;
 }
 
-void DeviceGreenhous::PumpOn(uint64_t Timer)
-{
-    TimerPump = millis() + Timer;
-    IsOnPump = true;
-    digitalWrite(PhysicsPin.Port_Pump, LOW);
-
+bool DeviceGreenhous::PumpOn(uint64_t Timer)
+{   
     JsonDocument doc;
-    doc["TypeMessage"] = TypeMessage::StatePump;
-    doc["Message"]     = 1;
-    queue.push(doc);
-
     doc["TypeMessage"] = TypeMessage::GroundHumidity;
     doc["Message"]     = Moisture;
     queue.push(doc);
 
+    int16_t IsWater = ReadSensor(WaterSensor);
+
+    if(!IsWater) {
+        TimerPump = millis() + Timer;
+        IsOnPump = true;
+        digitalWrite(PhysicsPin.Port_Pump, LOW);
+
+        JsonDocument doc;
+        doc["TypeMessage"] = TypeMessage::StatePump;
+        doc["Message"]     = 1;
+        queue.push(doc);
+        return true;
+
+    } else {
+        doc["TypeMessage"] = TypeMessage::StateWater;
+        doc["Message"]     = 0;
+        queue.push(doc);
+    }
+    return false;
 }
 
 void DeviceGreenhous::LampOn(uint64_t Timer)
@@ -112,20 +141,32 @@ void DeviceGreenhous::LampOn(uint64_t Timer)
     queue.push(doc);
 }
 
-void DeviceGreenhous::HumidifierOn(uint64_t Timer)
-{
-    TimerHumidifier = millis() + Timer;
-    IsOnHumidifier = true;
-    digitalWrite(PhysicsPin.Port_Humidifier, LOW);
-
+bool DeviceGreenhous::HumidifierOn(uint64_t Timer)
+{   
     JsonDocument doc;
-    doc["TypeMessage"] = TypeMessage::StateHumidifer;
-    doc["Message"]     = 1;
-    queue.push(doc);
-
     doc["TypeMessage"] = TypeMessage::AirHumidity;
     doc["Message"]     = Humidity;
     queue.push(doc);
+
+    int16_t IsWater = ReadSensor(WaterSensor);
+
+    if(!IsWater) {
+        TimerHumidifier = millis() + Timer;
+        IsOnHumidifier = true;
+        digitalWrite(PhysicsPin.Port_Humidifier, LOW);
+
+        doc["TypeMessage"] = TypeMessage::StateHumidifer;
+        doc["Message"]     = 1;
+        queue.push(doc);
+
+        return true;
+    } else {
+        doc["TypeMessage"] = TypeMessage::StateWater;
+        doc["Message"]     = 0;
+        queue.push(doc);
+    }
+
+    return false;
 }
 
 void DeviceGreenhous::CheckTimerHumidifier()

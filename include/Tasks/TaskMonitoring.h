@@ -5,7 +5,7 @@ class DeviceGreenhous Zone1(Mint, 260);
 TaskHandle_t Monitoring_taskZone1;
 void MonitoringCodeZone1(void * pvParameters) {
   Serial.println("Задача по мониторингу");
-  Zone1.Init(23,22,39,36,21);
+  Zone1.Init(23,22,39,36,21,19);
   uint64_t Time = millis() + 20000;
   while(true) {
     Zone1.MonitoringMoisture();

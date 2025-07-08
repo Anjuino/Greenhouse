@@ -26,6 +26,8 @@ class DeviceGreenhous {
             uint8_t Port_Pump;
             uint8_t Port_MoistureSensor;
             uint8_t Port_LightSensor;
+            uint8_t Port_HumiditySensor;
+            uint8_t Port_WaterSensor;
         } PhysicsPin;
         
         uint64_t TimerPump = 0;         // Время работы
@@ -54,7 +56,8 @@ class DeviceGreenhous {
             MoistureSensor        = 1,
             HumiditySensor        = 2,
             TemperatureSensor     = 3,
-            LightSensor           = 4
+            LightSensor           = 4,
+            WaterSensor           = 5
         };
 
         enum Mode {
@@ -84,14 +87,14 @@ class DeviceGreenhous {
         DeviceGreenhous(DataCrop TypeCrop, uint16_t SettingAddress);
         ~DeviceGreenhous();
 
-        void Init(uint8_t Port_Humidifier, uint8_t Port_Pump, uint8_t Port_MoistureSensor, uint8_t Port_LightSensor, uint8_t Port_HumidiferSensor);
+        void Init(uint8_t Port_Humidifier, uint8_t Port_Pump, uint8_t Port_MoistureSensor, uint8_t Port_LightSensor, uint8_t Port_HumiditySensor, uint8_t Port_WaterSensor);
         
         void MonitoringMoisture();
         void MonitoringHumidity();
         void MonitoringLighting();
 
-        void PumpOn(uint64_t Timer);
-        void HumidifierOn(uint64_t Timer);
+        bool PumpOn(uint64_t Timer);
+        bool HumidifierOn(uint64_t Timer);
         void LampOn(uint64_t Timer);
 
         int16_t ReadSensor(uint8_t TypeSensor);

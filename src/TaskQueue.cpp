@@ -1,7 +1,8 @@
 #include "Tasks/TaskQueue.h"
-
+#include "TgBot.h"
 std::queue<JsonDocument> queue;          
 TaskHandle_t Queue_task;          
+extern TgBot Bot;
 
 void QueueCode( void * pvParameters ) {
     while(true) {
@@ -9,7 +10,17 @@ void QueueCode( void * pvParameters ) {
             JsonDocument doc = queue.front();
             String jsonString;
             serializeJson(doc, jsonString);
-            webSocket.sendTXT(jsonString);
+
+            if(doc["TypeMessage"] == 6) {
+                if(doc["Message"] == 0) {
+                    Bot.SendMessage("Вода закончилась");
+                }
+            }
+            else {
+                String jsonString;
+                serializeJson(doc, jsonString);
+                webSocket.sendTXT(jsonString);
+            }
 
             queue.pop();
         }

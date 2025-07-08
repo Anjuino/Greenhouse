@@ -162,11 +162,12 @@ void TgBot::newMsg(FB_msg& msg)
         String Message;
         if (Zone1.IsOnPump) Message = "Полив уже включен";
         else { 
-            Message = "Включил полив";
-            Zone1.PumpOn(Zone1.Setting.TimePumpOn);
+            if(Zone1.PumpOn(Zone1.Setting.TimePumpOn)) {
+                Message = "Включил полив";
+            }
         }
 
-        bot.sendMessage (Message);
+        if (!Message.isEmpty()) bot.sendMessage (Message);
         return;
     }
 
@@ -174,11 +175,12 @@ void TgBot::newMsg(FB_msg& msg)
         String Message;
         if (Zone1.IsOnHumidifier) Message = "Увлажнитель уже включен";
         else {
-            Message = "Включил увлажнитель";
-            Zone1.HumidifierOn(Zone1.Setting.TimeHumidifierOn);
+            if (Zone1.HumidifierOn(Zone1.Setting.TimeHumidifierOn)) {
+                Message = "Включил увлажнитель";
+            }
         }
 
-        bot.sendMessage (Message);
+        if (!Message.isEmpty()) bot.sendMessage (Message);
         return;
     }
 
@@ -204,6 +206,7 @@ void TgBot::newMsg(FB_msg& msg)
 
         int16_t Moisture = Zone1.ReadSensor(DeviceGreenhous::TypeSensor::MoistureSensor);
         int16_t Humidity = Zone1.ReadSensor(DeviceGreenhous::TypeSensor::HumiditySensor);
+        int16_t IsWater  = Zone1.ReadSensor(DeviceGreenhous::TypeSensor::WaterSensor);
 
         String PumpState;
         if (Zone1.IsOnPump) PumpState = "Включен";
@@ -216,6 +219,10 @@ void TgBot::newMsg(FB_msg& msg)
         String LampState;
         if (Zone1.IsOnLamp) LampState = "Включена";
         else                LampState = "Выключена";
+
+        String Water;
+        if (IsWater) Water = "нет";
+        else         Water = "есть";
 
         String MoistureMonitoring;
         if (Zone1.Setting.WorkModePump == DeviceGreenhous::Mode::Auto)    MoistureMonitoring = "Автоматический";
@@ -243,8 +250,9 @@ void TgBot::newMsg(FB_msg& msg)
         Message += "Состояние \n";
 
         Message += "Влажность почвы: " + String(Moisture) + "%\n";
-        Message += "Влажность воздуха: " + String(Humidity) + "%\n\n";
+        Message += "Влажность воздуха: " + String(Humidity) + "%\n";
         //Message += "Освещенность: " + String(100) + " \n\n";
+        Message += "Вода: " + Water + "\n\n";
 
         Message += "Полив: " + PumpState + "\n";
         Message += "Увлажнитель: " + HumidiferState + "\n";

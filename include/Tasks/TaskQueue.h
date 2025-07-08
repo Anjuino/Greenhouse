@@ -11,7 +11,8 @@ typedef enum {
     AirHumidity,
     StatePump,
     StateHumidifer,
-    StateLamp
+    StateLamp,
+    StateWater
 } TypeMessage;
 
 extern std::queue<JsonDocument> queue;    

@@ -14,7 +14,7 @@ void setup()
   WiFi.begin("TP-Link_467D", "66484608");
   uint64_t Timer = millis();
   while (WiFi.status() != WL_CONNECTED) {
-      if (millis () > Timer) Timer = millis() + 200;
+    if (millis () > Timer) Timer = millis() + 200;
   }
 
   WebSocketInit(); 
