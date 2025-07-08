@@ -13,6 +13,7 @@ class TgBot {
         void newMsg(FB_msg& msg);
         void ShowGlobalMenu();
         void Reset();
+        String getModeString(uint8_t mode);
 
     public:
         TgBot(class WIFIManagerTgBot *WIFIManager);

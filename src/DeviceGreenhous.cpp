@@ -73,7 +73,7 @@ int16_t DeviceGreenhous::ReadSensor(uint8_t TypeSensor)
         
         Moisture = Moisture / 3;*/
         Moisture = analogRead(PhysicsPin.Port_MoistureSensor);
-        Moisture += 100 - ((Moisture - 2500) * 100) / (4095 - 2500);
+        Moisture = 100 - ((Moisture - 2500) * 100) / (4095 - 2500);
         return Moisture;
     }
 

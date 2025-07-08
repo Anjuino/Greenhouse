@@ -21,7 +21,7 @@ void setup()
 
   xTaskCreatePinnedToCore(QueueCode, "QueueLoop", 1024 * 7, NULL, 6, &Queue_task, 1);
 
-  xTaskCreatePinnedToCore(MonitoringCodeZone1, "MonitoringZone1", 1024 * 20, NULL, 3, &Monitoring_taskZone1, 0);
+  xTaskCreatePinnedToCore(MonitoringCodeZone1, "MonitoringZone1", 1024 * 15, NULL, 3, &Monitoring_taskZone1, 0);
   
   delay(10);
 

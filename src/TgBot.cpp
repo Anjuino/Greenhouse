@@ -204,70 +204,57 @@ void TgBot::newMsg(FB_msg& msg)
     if (msg.text == "Состояние") {
         String Message;
 
+        // Получаем данные сенсоров
         int16_t Moisture = Zone1.ReadSensor(DeviceGreenhous::TypeSensor::MoistureSensor);
         int16_t Humidity = Zone1.ReadSensor(DeviceGreenhous::TypeSensor::HumiditySensor);
         int16_t IsWater  = Zone1.ReadSensor(DeviceGreenhous::TypeSensor::WaterSensor);
 
-        String PumpState;
-        if (Zone1.IsOnPump) PumpState = "Включен";
-        else                PumpState = "Выключен";
+        // Получаем состояние устройств
+        String PumpState      = Zone1.IsOnPump ? "Включен" : "Выключен";
+        String HumidiferState = Zone1.IsOnHumidifier ? "Включен" : "Выключен";
+        String LampState      = Zone1.IsOnLamp ? "Включена" : "Выключена";
+        String Water          = IsWater ? "нет" : "есть";
 
-        String HumidiferState;
-        if (Zone1.IsOnHumidifier) HumidiferState = "Включен";
-        else                      HumidiferState = "Выключен";
+        // Получаем режимы работы
+        String MoistureMonitoring = getModeString(Zone1.Setting.WorkModePump);
+        String HumidityMonitoring = getModeString(Zone1.Setting.WorkModeHumidifier);
+        String LightMonitoring = getModeString(Zone1.Setting.WorkModeLamp);
+        String NightMode = Zone1.Setting.IsNightMode ? "Включен" : "Выключен";
 
-        String LampState;
-        if (Zone1.IsOnLamp) LampState = "Включена";
-        else                LampState = "Выключена";
+        // Получаем информацию о памяти
+        uint32_t freeHeap         = ESP.getFreeHeap();
+        uint32_t minFreeHeap      = ESP.getMinFreeHeap();
+        uint32_t maxAllocHeap     = ESP.getMaxAllocHeap();
+        uint8_t heapFragmentation = 100 - (maxAllocHeap * 100 / freeHeap);
 
-        String Water;
-        if (IsWater) Water = "нет";
-        else         Water = "есть";
-
-        String MoistureMonitoring;
-        if (Zone1.Setting.WorkModePump == DeviceGreenhous::Mode::Auto)    MoistureMonitoring = "Автоматический";
-        if (Zone1.Setting.WorkModePump == DeviceGreenhous::Mode::Manual)  MoistureMonitoring = "Ручной";
-        if (Zone1.Setting.WorkModePump == DeviceGreenhous::Mode::Shedule) MoistureMonitoring = "По расписанию";
-
-        String HumidityMonitoring;
-        if (Zone1.Setting.WorkModeHumidifier == DeviceGreenhous::Mode::Auto)    HumidityMonitoring = "Автоматический";
-        if (Zone1.Setting.WorkModeHumidifier == DeviceGreenhous::Mode::Manual)  HumidityMonitoring = "Ручной";
-        if (Zone1.Setting.WorkModeHumidifier == DeviceGreenhous::Mode::Shedule) HumidityMonitoring = "По расписанию";
-
-        String LightMonitoring;
-        if (Zone1.Setting.WorkModeLamp == DeviceGreenhous::Mode::Auto)    LightMonitoring = "Автоматический";
-        if (Zone1.Setting.WorkModeLamp == DeviceGreenhous::Mode::Manual)  LightMonitoring = "Ручной";
-        if (Zone1.Setting.WorkModeLamp == DeviceGreenhous::Mode::Shedule) LightMonitoring = "По расписанию";
+        // Формируем сообщение
+        Message += "Состояние системы\n\n";
         
-        String NightMode;
-        if (Zone1.Setting.IsNightMode) NightMode = "Включен";
-        else                           NightMode = "Выключен";
+        Message += "Параметры среды:\n";
+        Message += "• Влажность почвы: " + String(Moisture) + "%\n";
+        Message += "• Влажность воздуха: " + String(Humidity) + "%\n\n";
+        
+        Message += "Состояние устройств:\n";
+        Message += "• Полив: " + PumpState + "\n";
+        Message += "• Увлажнитель: " + HumidiferState + "\n";
+        Message += "• Лампа: " + LampState + "\n";
+        Message += "• Наличие воды: " + Water + "\n\n";
+        
+        Message += "Мониторинг:\n";
+        Message += "• Почва: " + MoistureMonitoring + "\n";
+        Message += "• Воздух: " + HumidityMonitoring + "\n";
+        Message += "• Освещение: " + LightMonitoring + "\n";
+        Message += "• Ночной режим: " + NightMode + "\n\n";
+        
+        Message += "Состояние памяти:\n";
+        Message += "• Свободно: " + String(freeHeap/1024) + " KB\n";
+        Message += "• Минимально было свободно: " + String(minFreeHeap/1024) + " KB\n";
+        Message += "• Максимальный блок: " + String(maxAllocHeap/1024) + " KB\n";
+        Message += "• Фрагментация: " + String(heapFragmentation) + "%\n\n";
+        
+        Message += "Время на устройстве: " + String(timeClient.getHours()) + ":" + String(timeClient.getMinutes());
 
-        /*String TimeMode;
-        if (Zone1.Setting.IsNeedShedule) TimeMode = "Включено";
-        else                             TimeMode = "Выключено";  */         
-
-        Message += "Состояние \n";
-
-        Message += "Влажность почвы: " + String(Moisture) + "%\n";
-        Message += "Влажность воздуха: " + String(Humidity) + "%\n";
-        //Message += "Освещенность: " + String(100) + " \n\n";
-        Message += "Вода: " + Water + "\n\n";
-
-        Message += "Полив: " + PumpState + "\n";
-        Message += "Увлажнитель: " + HumidiferState + "\n";
-        Message += "Лампа: " + LampState + " \n\n";
-
-        Message += "Мониторинг: \n";
-        Message += "Почва: " + MoistureMonitoring  + "\n";
-        Message += "Воздух: " + HumidityMonitoring +  "\n";
-        Message += "Освещение: " + LightMonitoring + "\n";
-        Message += "Ночной режим: " + NightMode + "\n";
-        //Message += "Ночное расписание: " + TimeMode + "\n";
-        Message += "Время на устройстве: " + String(timeClient.getHours()) + ":" + String(timeClient.getMinutes()) + "\n";
-
-        bot.sendMessage (Message);
-
+        bot.sendMessage(Message);
         return;
     }
 
@@ -297,4 +284,13 @@ void TgBot::Reset()
     bot.tickManual(); // Чтобы отметить сообщение прочитанным
     delay(10);
     ESP.restart();
+}
+
+String TgBot::getModeString(uint8_t mode) {
+    switch(mode) {
+        case DeviceGreenhous::Mode::Auto: return "Автоматический";
+        case DeviceGreenhous::Mode::Manual: return "Ручной";
+        case DeviceGreenhous::Mode::Shedule: return "По расписанию";
+        default: return "Неизвестно";
+    }
 }
