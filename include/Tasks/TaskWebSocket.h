@@ -51,3 +51,13 @@ void WebSocketInit()
 
   webSocket.setReconnectInterval(10000);
 }
+
+
+TaskHandle_t WebSocket_task;
+void WebSocketCode( void * pvParameters ) {
+  WebSocketInit(); 
+  while(true) {
+    webSocket.loop();
+    delay(1);
+  }
+}

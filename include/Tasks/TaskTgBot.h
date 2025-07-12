@@ -1,5 +1,5 @@
 #include "TgBot.h"
-TgBot Bot(&WIFIManager);
+TgBot Bot;
 
 TaskHandle_t TgBot_task;
 void TgBotCode( void * pvParameters ) {

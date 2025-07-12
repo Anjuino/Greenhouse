@@ -64,14 +64,6 @@ int16_t DeviceGreenhous::ReadSensor(uint8_t TypeSensor)
 {
     if (TypeSensor == MoistureSensor) {
         
-        Moisture = 0;
-
-        /*for (uint8_t i = 0; i <= 3; i++) {
-            int16_t MoistureMeasurement = analogRead(PhysicsPin.Port_MoistureSensor);
-            Moisture += 100 - ((MoistureMeasurement - 2500) * 100) / (4095 - 2500);
-        }
-        
-        Moisture = Moisture / 3;*/
         Moisture = analogRead(PhysicsPin.Port_MoistureSensor);
         Moisture = 100 - ((Moisture - 2500) * 100) / (4095 - 2500);
         return Moisture;
@@ -88,10 +80,11 @@ int16_t DeviceGreenhous::ReadSensor(uint8_t TypeSensor)
     if (TypeSensor == WaterSensor) {
         pinMode(PhysicsPin.Port_WaterSensor, OUTPUT);
         digitalWrite(PhysicsPin.Port_WaterSensor, HIGH);
-        delay(10);  
+
+        delay(40);  
         
         pinMode(PhysicsPin.Port_WaterSensor, INPUT_PULLUP);
-        delay(10);  
+        delay(40);  
         
         int16_t waterStatus = digitalRead(PhysicsPin.Port_WaterSensor);
         
@@ -236,7 +229,6 @@ void DeviceGreenhous::MonitoringMoisture()
 
                 ReadSensor(MoistureSensor);
                 if(Moisture < TypeCrop.GroundDry) {
-                    //TimerMonitoringPump = millis() + 60000*20;
                     PumpOn(Setting.TimePumpOn);
                 }
             }
@@ -256,7 +248,6 @@ void DeviceGreenhous::MonitoringHumidity()
                 
                 if (Humidity < TypeCrop.AirDry) {
                     HumidifierOn(Setting.TimeHumidifierOn);
-                    //TimerMonitoringHumidifier = millis() + 60000*20;
                 }
             }
         }

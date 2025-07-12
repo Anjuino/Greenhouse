@@ -6,8 +6,6 @@ class TgBot {
     
     private:
         FastBot bot;
-
-        //WIFIManagerTgBot* WIFIManager;
         static TgBot* Bot; 
         
         void newMsg(FB_msg& msg);
@@ -17,6 +15,7 @@ class TgBot {
 
     public:
         TgBot(class WIFIManagerTgBot *WIFIManager);
+        TgBot() {Bot = this;};
         ~TgBot() {};    
 
         void BotInit();
