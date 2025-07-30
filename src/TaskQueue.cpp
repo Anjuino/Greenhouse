@@ -12,19 +12,12 @@ void QueueCode( void * pvParameters ) {
             serializeJson(doc, jsonString);
 
             if(doc["TypeMessage"] == 6) {
-                if(doc["Message"] == 0) {
-                    Bot.SendMessage("Вода закончилась");
-                }
+                if(doc["Message"] == 0) Bot.SendMessage("Вода закончилась");
             }
-            else {
-                String jsonString;
-                serializeJson(doc, jsonString);
-                webSocket.sendTXT(jsonString);
-            }
+            else webSocket.sendTXT(jsonString);
 
             queue.pop();
         }
-
         delay(10);
     }
 }
