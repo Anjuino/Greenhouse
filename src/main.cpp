@@ -20,7 +20,7 @@ void setup()
 
   xTaskCreatePinnedToCore(MonitoringCodeZone1, "MonitoringZone1", 1024 * 8, NULL, 3, &Monitoring_taskZone1, 0);
   
-  xTaskCreatePinnedToCore(TgBotCode, "TgBootLoop", 1024 * 20, NULL, 2, &TgBot_task, 1); 
+  xTaskCreatePinnedToCore(TgBotCode, "TgBootLoop", 1024 * 10, NULL, 2, &TgBot_task, 1); 
 
   xTaskCreatePinnedToCore(TimeCode, "TimeLoop", 1024 * 4, NULL, 5, &Time_task, 1); 
   

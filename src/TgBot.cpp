@@ -248,7 +248,6 @@ void TgBot::newMsg(FB_msg& msg)
         
         Message += "Состояние памяти:\n";
         Message += "• Свободно: " + String(freeHeap/1024) + " KB\n";
-        Message += "• Минимально было свободно: " + String(minFreeHeap/1024) + " KB\n";
         Message += "• Максимальный блок: " + String(maxAllocHeap/1024) + " KB\n";
         Message += "• Фрагментация: " + String(heapFragmentation) + "%\n\n";
         
