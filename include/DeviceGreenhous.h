@@ -39,6 +39,8 @@ class DeviceGreenhous {
         int16_t Humidity = 0;           // Влажность воздуха
         int16_t Light    = 0;           // Освещенность зоны 
         
+        float alpha = 0.3;         // Коэффициент сглаживания (0.1–0.5)
+        float filteredMoisture = 1500; 
 
         void CheckTimerPump();
         void CheckTimerHumidifier();

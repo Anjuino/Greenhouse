@@ -64,8 +64,11 @@ int16_t DeviceGreenhous::ReadSensor(uint8_t TypeSensor)
 {
     if (TypeSensor == MoistureSensor) {
         
-        Moisture = analogRead(PhysicsPin.Port_MoistureSensor);
-        Moisture = 100 - ((Moisture - 2500) * 100) / (4095 - 2500);
+        int rawMoisture = analogRead(PhysicsPin.Port_MoistureSensor);
+        filteredMoisture = alpha * rawMoisture + (1 - alpha) * filteredMoisture;
+
+        Moisture = map(filteredMoisture, 2700, 1100, 0, 100);
+        Moisture = constrain(Moisture, 0, 100);
         return Moisture;
     }
 
