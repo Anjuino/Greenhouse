@@ -14,11 +14,11 @@ void setup()
     if (millis () > Timer) Timer = millis() + 200;
   }
 
-  xTaskCreatePinnedToCore(WebSocketCode, "WebSocketCode", 1024 * 6, NULL, 5, &WebSocket_task, 1);
+  xTaskCreatePinnedToCore(WebSocketCode, "WebSocketCode", 1024 * 5, NULL, 5, &WebSocket_task, 1);
 
-  xTaskCreatePinnedToCore(QueueCode, "QueueLoop", 1024 * 7, NULL, 6, &Queue_task, 1);
+  xTaskCreatePinnedToCore(QueueCode, "QueueLoop", 1024 * 5, NULL, 6, &Queue_task, 1);
 
-  xTaskCreatePinnedToCore(MonitoringCodeZone1, "MonitoringZone1", 1024 * 8, NULL, 3, &Monitoring_taskZone1, 0);
+  xTaskCreatePinnedToCore(MonitoringCodeZone1, "MonitoringZone1", 1024 * 6, NULL, 3, &Monitoring_taskZone1, 0);
   
   xTaskCreatePinnedToCore(TgBotCode, "TgBootLoop", 1024 * 10, NULL, 2, &TgBot_task, 1); 
 

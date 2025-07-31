@@ -209,6 +209,8 @@ void TgBot::newMsg(FB_msg& msg)
         int16_t Humidity = Zone1.ReadSensor(DeviceGreenhous::TypeSensor::HumiditySensor);
         int16_t IsWater  = Zone1.ReadSensor(DeviceGreenhous::TypeSensor::WaterSensor);
 
+        int16_t MoistureAnalog = analogRead(39);
+
         // Получаем состояние устройств
         String PumpState      = Zone1.IsOnPump ? "Включен" : "Выключен";
         String HumidiferState = Zone1.IsOnHumidifier ? "Включен" : "Выключен";
@@ -232,6 +234,7 @@ void TgBot::newMsg(FB_msg& msg)
         
         Message += "Параметры среды:\n";
         Message += "• Влажность почвы: " + String(Moisture) + "%\n";
+        Message += "• Влажность почвы аналог: " + String(MoistureAnalog) + "\n";
         Message += "• Влажность воздуха: " + String(Humidity) + "%\n\n";
         
         Message += "Состояние устройств:\n";
