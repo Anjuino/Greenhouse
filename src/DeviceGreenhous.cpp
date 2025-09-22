@@ -1,6 +1,7 @@
 #include "DeviceGreenhous.h"
 #include "EEPROM.h"
 #include "Tasks/TaskQueue.h"
+#include "freertos/queue.h"
 
 DeviceGreenhous::DeviceGreenhous(DataCrop TypeCrop, uint16_t SettingAddress)
 {
@@ -40,7 +41,7 @@ void DeviceGreenhous::Init(uint8_t Port_Humidifier, uint8_t Port_Pump, uint8_t P
         Setting.SettingIsEmpty = false;
 
         Setting.WorkModePump = 1;
-        Setting.TimePumpOn   = 5000;
+        Setting.TimePumpOn   = 7000;
 
         Setting.WorkModeHumidifier = 1;
         Setting.TimeHumidifierOn   = 240000;
@@ -101,10 +102,11 @@ int16_t DeviceGreenhous::ReadSensor(uint8_t TypeSensor)
 
 bool DeviceGreenhous::PumpOn(uint64_t Timer)
 {   
-    JsonDocument doc;
-    doc["TypeMessage"] = TypeMessage::GroundHumidity;
-    doc["Message"]     = Moisture;
-    queue.push(doc);
+    JsonDocument *doc = new JsonDocument();
+    (*doc)["TypeMessage"] = TypeMessage::GroundHumidity;
+    (*doc)["Message"]     = Moisture;
+    xQueueSend(queue, &doc, portMAX_DELAY); 
+    //queue.push(doc);
 
     int16_t IsWater = ReadSensor(WaterSensor);
 
@@ -113,16 +115,18 @@ bool DeviceGreenhous::PumpOn(uint64_t Timer)
         IsOnPump = true;
         digitalWrite(PhysicsPin.Port_Pump, LOW);
 
-        JsonDocument doc;
-        doc["TypeMessage"] = TypeMessage::StatePump;
-        doc["Message"]     = 1;
-        queue.push(doc);
+        JsonDocument *doc = new JsonDocument();
+        (*doc)["TypeMessage"] = TypeMessage::StatePump;
+        (*doc)["Message"]     = 1;
+        xQueueSend(queue, &doc, portMAX_DELAY); 
+        //queue.push(doc);
         return true;
 
     } else {
-        doc["TypeMessage"] = TypeMessage::StateWater;
-        doc["Message"]     = 0;
-        queue.push(doc);
+        (*doc)["TypeMessage"] = TypeMessage::StateWater;
+        (*doc)["Message"]     = 0;
+        xQueueSend(queue, &doc, portMAX_DELAY); 
+        //queue.push(doc);
     }
     return false;
 }
@@ -137,18 +141,20 @@ void DeviceGreenhous::LampOn(uint64_t Timer)
     }
     Lamp.show ();
 
-    JsonDocument doc;
-    doc["TypeMessage"] = TypeMessage::StateLamp;
-    doc["Message"]     = 1;
-    queue.push(doc);
+    JsonDocument *doc = new JsonDocument();
+    (*doc)["TypeMessage"] = TypeMessage::StateLamp;
+    (*doc)["Message"]     = 1;
+    xQueueSend(queue, &doc, portMAX_DELAY); 
+    //queue.push(doc);
 }
 
 bool DeviceGreenhous::HumidifierOn(uint64_t Timer)
 {   
-    JsonDocument doc;
-    doc["TypeMessage"] = TypeMessage::AirHumidity;
-    doc["Message"]     = Humidity;
-    queue.push(doc);
+    JsonDocument *doc = new JsonDocument();
+    (*doc)["TypeMessage"] = TypeMessage::AirHumidity;
+    (*doc)["Message"]     = Humidity;
+    xQueueSend(queue, &doc, portMAX_DELAY); 
+    //queue.push(doc);
 
     int16_t IsWater = ReadSensor(WaterSensor);
 
@@ -157,15 +163,17 @@ bool DeviceGreenhous::HumidifierOn(uint64_t Timer)
         IsOnHumidifier = true;
         digitalWrite(PhysicsPin.Port_Humidifier, LOW);
 
-        doc["TypeMessage"] = TypeMessage::StateHumidifer;
-        doc["Message"]     = 1;
-        queue.push(doc);
+        (*doc)["TypeMessage"] = TypeMessage::StateHumidifer;
+        (*doc)["Message"]     = 1;
+        xQueueSend(queue, &doc, portMAX_DELAY); 
+        //queue.push(doc);
 
         return true;
     } else {
-        doc["TypeMessage"] = TypeMessage::StateWater;
-        doc["Message"]     = 0;
-        queue.push(doc);
+        (*doc)["TypeMessage"] = TypeMessage::StateWater;
+        (*doc)["Message"]     = 0;
+        xQueueSend(queue, &doc, portMAX_DELAY); 
+        //queue.push(doc);
     }
 
     return false;
@@ -177,14 +185,16 @@ void DeviceGreenhous::CheckTimerHumidifier()
         digitalWrite(PhysicsPin.Port_Humidifier, HIGH);
         IsOnHumidifier = false;
 
-        JsonDocument doc;
-        doc["TypeMessage"] = TypeMessage::StateHumidifer;
-        doc["Message"]     = 0;
-        queue.push(doc);
+        JsonDocument *doc = new JsonDocument();
+        (*doc)["TypeMessage"] = TypeMessage::StateHumidifer;
+        (*doc)["Message"]     = 0;
+        xQueueSend(queue, &doc, portMAX_DELAY); 
+        //queue.push(doc);
 
-        doc["TypeMessage"] = TypeMessage::AirHumidity;
-        doc["Message"]     = ReadSensor(DeviceGreenhous::MoistureSensor);
-        queue.push(doc);
+        (*doc)["TypeMessage"] = TypeMessage::AirHumidity;
+        (*doc)["Message"]     = ReadSensor(DeviceGreenhous::MoistureSensor);
+        xQueueSend(queue, &doc, portMAX_DELAY); 
+        //queue.push(doc);
     } 
 }
 
@@ -194,14 +204,16 @@ void DeviceGreenhous::CheckTimerPump()
         digitalWrite(PhysicsPin.Port_Pump, HIGH);
         IsOnPump = false;
 
-        JsonDocument doc;
-        doc["TypeMessage"] = TypeMessage::StatePump;
-        doc["Message"]     = 0;
-        queue.push(doc); 
+        JsonDocument *doc = new JsonDocument();
+        (*doc)["TypeMessage"] = TypeMessage::StatePump;
+        (*doc)["Message"]     = 0;
+        xQueueSend(queue, &doc, portMAX_DELAY); 
+        //queue.push(doc); 
 
-        doc["TypeMessage"] = TypeMessage::GroundHumidity;
-        doc["Message"]     = ReadSensor(DeviceGreenhous::MoistureSensor);
-        queue.push(doc);
+        (*doc)["TypeMessage"] = TypeMessage::GroundHumidity;
+        (*doc)["Message"]     = ReadSensor(DeviceGreenhous::MoistureSensor);
+        xQueueSend(queue, &doc, portMAX_DELAY); 
+        //queue.push(doc);
     }
 }
 
@@ -214,10 +226,11 @@ void DeviceGreenhous::CheckTimerLighiting()
         }
         Lamp.show ();
 
-        JsonDocument doc;
-        doc["TypeMessage"] =TypeMessage::StateLamp;
-        doc["Message"]     = 0;
-        queue.push(doc); 
+        JsonDocument *doc = new JsonDocument();
+        (*doc)["TypeMessage"] =TypeMessage::StateLamp;
+        (*doc)["Message"]     = 0;
+        xQueueSend(queue, &doc, portMAX_DELAY); 
+        //queue.push(doc); 
     } 
 }
 

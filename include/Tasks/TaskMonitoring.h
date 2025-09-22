@@ -15,22 +15,29 @@ void MonitoringCodeZone1(void * pvParameters) {
     if (Time < millis()) {
       Time = millis() + 60000 * 20;
 
-      JsonDocument doc;
-      doc["TypeMessage"] = TypeMessage::GroundHumidity;
-      doc["Message"]     = Zone1.ReadSensor(DeviceGreenhous::MoistureSensor);
-      queue.push(doc);
+      JsonDocument *doc1 = new JsonDocument();
+      (*doc1)["TypeMessage"] = TypeMessage::GroundHumidity;
+      (*doc1)["Message"]     = Zone1.ReadSensor(DeviceGreenhous::MoistureSensor);
+      xQueueSend(queue, &doc1, portMAX_DELAY); 
+      //queue.push(doc);
       
-      doc["TypeMessage"] = TypeMessage::AirHumidity;
-      doc["Message"]     = Zone1.ReadSensor(DeviceGreenhous::HumiditySensor);
-      queue.push(doc); 
+      JsonDocument *doc2 = new JsonDocument();
+      (*doc2)["TypeMessage"] = TypeMessage::AirHumidity;
+      (*doc2)["Message"]     = Zone1.ReadSensor(DeviceGreenhous::HumiditySensor);
+      xQueueSend(queue, &doc2, portMAX_DELAY); 
+      //queue.push(doc); 
 
-      doc["TypeMessage"] = TypeMessage::StatePump;
-      doc["Message"]     = Zone1.IsOnPump ? 1 : 0;
-      queue.push(doc);
+      JsonDocument *doc3 = new JsonDocument();
+      (*doc3)["TypeMessage"] = TypeMessage::StatePump;
+      (*doc3)["Message"]     = Zone1.IsOnPump ? 1 : 0;
+      xQueueSend(queue, &doc3, portMAX_DELAY); 
+      //queue.push(doc);
       
-      doc["TypeMessage"] = TypeMessage::StateHumidifer;
-      doc["Message"]     = Zone1.IsOnHumidifier ? 1 : 0;
-      queue.push(doc); 
+      JsonDocument *doc4 = new JsonDocument();
+      (*doc4)["TypeMessage"] = TypeMessage::StateHumidifer;
+      (*doc4)["Message"]     = Zone1.IsOnHumidifier ? 1 : 0;
+      xQueueSend(queue, &doc4, portMAX_DELAY); 
+      //queue.push(doc); 
     }
   }
 }

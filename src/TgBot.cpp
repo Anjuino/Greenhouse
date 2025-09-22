@@ -191,10 +191,11 @@ void TgBot::newMsg(FB_msg& msg)
             Message = "Включил освещение";
             Zone1.LampOn(Zone1.Setting.TimeLampOn);
 
-            JsonDocument doc;
-            doc["TypeMessage"] = TypeMessage::StateLamp;
-            doc["Message"]     = 1;
-            queue.push(doc);
+            JsonDocument *doc = new JsonDocument();
+            (*doc)["TypeMessage"] = TypeMessage::StateLamp;
+            (*doc)["Message"]     = 1;
+            xQueueSend(queue, &doc, portMAX_DELAY); 
+            //queue.push(doc);
         }
 
         bot.sendMessage (Message);

@@ -15,7 +15,8 @@ typedef enum {
     StateWater
 } TypeMessage;
 
-extern std::queue<JsonDocument> queue;    
+//extern std::queue<JsonDocument> queue;
+extern QueueHandle_t queue;    
 extern TaskHandle_t Queue_task;     
 
 void QueueCode( void * pvParameters );
